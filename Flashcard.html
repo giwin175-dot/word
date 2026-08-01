@@ -1,777 +1,599 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FSRS 智慧英語單字閃卡</title>
-    <style>
-        :root {
-            --primary: #4F46E5;
-            --primary-hover: #4338CA;
-            --bg: #F3F4F6;
-            --card-bg: #FFFFFF;
-            --text: #1F2937;
-            --success: #10B981;
-            --danger: #EF4444;
-            --secondary: #6B7280;
-            --secondary-hover: #4B5563;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FSRS 智慧英語單字閃卡</title>
+<style>
+  :root{
+    --bg:#EDEFF3;
+    --card:#FFFFFF;
+    --ink:#1B2340;
+    --ink-soft:#5B6478;
+    --accent:#4B4ACF;
+    --accent-soft:#EDEBFB;
+    --good:#2F8F6E;
+    --again:#B4436C;
+    --line:#DADFE7;
+    --tab:#F2C744;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    padding:20px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    color:var(--ink);
+    background:
+      repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(27,35,64,0.045) 28px),
+      var(--bg);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .container{width:100%;max-width:600px;display:flex;flex-direction:column;gap:18px;}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
+  header{text-align:center;padding-top:4px;}
+  .eyebrow{
+    font-family:"SF Mono","Consolas","Menlo",monospace;
+    font-size:0.7rem;letter-spacing:0.14em;
+    color:var(--accent);font-weight:700;text-transform:uppercase;
+  }
+  h1{
+    margin:6px 0 10px;
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,"Source Serif Pro",serif;
+    font-weight:700;font-size:1.9rem;letter-spacing:-0.01em;
+  }
+  .back-link{
+    display:inline-block;padding:6px 16px;background:var(--card);color:var(--ink-soft);
+    border:1px solid var(--line);border-radius:20px;font-weight:600;
+    text-decoration:none;font-size:0.85rem;
+  }
 
-        .container {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+  .panel{background:var(--card);padding:20px;border-radius:14px;border:1px solid var(--line);
+    box-shadow:0 2px 10px rgba(27,35,64,0.05);}
 
-        header {
-            text-align: center;
-        }
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;}
+  label{font-size:0.78rem;font-weight:700;margin-bottom:4px;display:block;color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:0.03em;}
+  select,input[type="file"],button{
+    width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;
+    box-sizing:border-box;font-size:0.9rem;background:#fff;color:var(--ink);
+  }
+  button{background:var(--accent);color:#fff;border:none;font-weight:700;cursor:pointer;
+    transition:filter .15s, transform .08s;}
+  button:hover{filter:brightness(1.07);}
+  button:active{transform:scale(0.98);}
+  button:disabled{opacity:.45;cursor:default;}
+  .btn-danger{background:var(--again);}
+  .btn-success{background:var(--good);}
+  .btn-secondary{background:#fff;color:var(--ink-soft);border:1px solid var(--line);}
+  .btn-secondary:hover{background:#F7F8FA;filter:none;}
 
-        h1 {
-            margin: 0 0 10px 0;
-            color: var(--primary);
-            font-size: 1.8rem;
-        }
+  .card-header-bar{display:flex;justify-content:space-between;align-items:center;}
+  .progress-bar{font-family:"SF Mono","Consolas","Menlo",monospace;font-size:0.85rem;color:var(--ink-soft);}
+  .shuffle-btn{width:auto;padding:5px 12px;font-size:0.8rem;background:var(--accent-soft);
+    color:var(--accent);border-radius:20px;font-weight:700;}
+  .shuffle-btn:hover{filter:brightness(0.97);}
 
-        .panel {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+  .progress-rail{height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin:8px 0 14px;}
+  .progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s;}
 
-        .controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
+  .card-container{position:relative;width:100%;height:320px;perspective:1200px;}
+  .card{width:100%;height:100%;position:absolute;transform-style:preserve-3d;
+    transition:transform .5s cubic-bezier(.4,0,.2,1);cursor:pointer;}
+  .card.flipped{transform:rotateY(180deg);}
+  .card-face{
+    position:absolute;width:100%;height:100%;backface-visibility:hidden;
+    background:var(--card);border-radius:16px;display:flex;flex-direction:column;
+    justify-content:center;align-items:center;padding:26px 30px 26px 40px;
+    box-shadow:0 8px 24px rgba(27,35,64,0.1);border:1px solid var(--line);
+    user-select:none;overflow:hidden;
+  }
+  .card-face::before{ /* index-card margin rule */
+    content:"";position:absolute;left:22px;top:0;bottom:0;width:1px;background:rgba(180,67,108,0.35);
+  }
+  .card-back::before{background:rgba(75,74,207,0.3);}
+  .card-face::after{ /* punch hole */
+    content:"";position:absolute;left:14px;top:16px;width:8px;height:8px;border-radius:50%;
+    background:var(--bg);box-shadow:0 0 0 1px var(--line) inset, 0 260px 0 0 var(--bg), 0 260px 0 1px var(--line);
+  }
+  .card-back{transform:rotateY(180deg);}
+  .card-text{font-weight:700;text-align:center;word-break:break-word;line-height:1.35;
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;max-width:100%;}
 
-        label {
-            font-size: 0.85rem;
-            font-weight: bold;
-            margin-bottom: 4px;
-            display: block;
-        }
+  .tts-zone{position:absolute;top:18px;left:36px;right:18px;bottom:18px;border-radius:8px;cursor:pointer;}
+  .tts-zone:hover{background:rgba(75,74,207,0.04);}
+  .tts-icon{position:absolute;top:14px;right:16px;font-size:1rem;opacity:.45;pointer-events:none;}
+  .card-tab{position:absolute;top:0;right:18px;background:var(--tab);color:#4A3B00;
+    font-family:"SF Mono","Consolas","Menlo",monospace;font-size:0.7rem;font-weight:700;
+    padding:3px 8px;border-radius:0 0 6px 6px;pointer-events:none;}
 
-        select, input[type="file"], button, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #D1D5DB;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 0.9rem;
-        }
+  .action-btns-grid{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
+  .main-action-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .main-action-btns button, .action-btns-grid>button{padding:13px 8px;font-size:0.95rem;border-radius:10px;}
 
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
+  .complete-panel{text-align:center;padding:32px 22px;}
+  .complete-panel h2{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;color:var(--ink);margin-top:0;}
+  .summary-box{background:var(--bg);border-radius:10px;padding:15px;margin:15px 0;
+    border:1px solid var(--line);text-align:left;}
+  .summary-item{display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.95rem;}
+  .summary-item:last-child{margin-bottom:0;}
+  .summary-item strong{font-family:"SF Mono","Consolas","Menlo",monospace;}
 
-        button:hover {
-            background-color: var(--primary-hover);
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        button.btn-danger {
-            background-color: var(--danger);
-        }
-
-        button.btn-success {
-            background-color: var(--success);
-        }
-
-        button.btn-secondary {
-            background-color: var(--secondary);
-        }
-
-        button.btn-secondary:hover {
-            background-color: var(--secondary-hover);
-        }
-
-        /* 閃卡頂部工具列 */
-        .card-header-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .progress-bar {
-            font-size: 0.85rem;
-            color: #6B7280;
-            font-weight: bold;
-        }
-
-        .shuffle-btn {
-            width: auto;
-            padding: 4px 10px;
-            font-size: 0.8rem;
-            background-color: #E5E7EB;
-            color: #374151;
-            border-radius: 4px;
-        }
-
-        .shuffle-btn:hover {
-            background-color: #D1D5DB;
-        }
-
-        /* 閃卡區域 */
-        .card-container {
-            position: relative;
-            width: 100%;
-            height: 320px;
-            perspective: 1000px;
-        }
-
-        .card {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            transform-style: preserve-3d;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 16px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-        }
-
-        .card.flipped {
-            transform: rotateY(180deg);
-        }
-
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            background: var(--card-bg);
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-            user-select: none;
-            border: 2px solid #E5E7EB;
-        }
-
-        .card-back {
-            transform: rotateY(180deg);
-        }
-
-        .card-text {
-            font-size: 2.2rem;
-            font-weight: bold;
-            text-align: center;
-            word-break: break-word;
-        }
-
-        /* 可點擊發音區域 */
-        .tts-zone {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .tts-zone:hover {
-            background-color: rgba(79, 70, 229, 0.05);
-        }
-
-        .tts-icon {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 1.2rem;
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        /* 操作按鈕網格 */
-        .action-btns-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .main-action-btns {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-        }
-
-        .main-action-btns button, .action-btns-grid > button {
-            padding: 12px 8px;
-            font-size: 0.95rem;
-            border-radius: 8px;
-        }
-
-        /* 結算畫面 */
-        .complete-panel {
-            text-align: center;
-            padding: 30px 20px;
-        }
-
-        .complete-panel h2 {
-            color: var(--primary);
-            margin-top: 0;
-        }
-
-        .summary-box {
-            background: #F9FAFB;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 15px 0;
-            border: 1px solid #E5E7EB;
-            text-align: left;
-        }
-
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-        }
-
-        .summary-item:last-child {
-            margin-bottom: 0;
-        }
-
-        /* 單字清單預覽與管理 */
-        .deck-list {
-            max-height: 150px;
-            overflow-y: auto;
-            margin-top: 10px;
-            border: 1px solid #E5E7EB;
-            border-radius: 6px;
-        }
-
-        .deck-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            border-bottom: 1px solid #E5E7EB;
-        }
-
-        .deck-item:last-child {
-            border-bottom: none;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 15px;
-            color: #9CA3AF;
-        }
-    </style>
+  .deck-list{max-height:170px;overflow-y:auto;margin-top:10px;border:1px solid var(--line);border-radius:8px;}
+  .deck-item{display:flex;justify-content:space-between;align-items:center;gap:8px;
+    padding:9px 12px;border-bottom:1px solid var(--line);}
+  .deck-item:last-child{border-bottom:none;}
+  .deck-item-main{min-width:0;flex:1;}
+  .deck-item-word{font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .strength-meter{height:3px;border-radius:2px;background:var(--line);margin-top:4px;overflow:hidden;}
+  .strength-fill{height:100%;background:var(--good);}
+  .due-tag{color:var(--again);font-size:0.72rem;font-weight:700;margin-left:6px;}
+  .deck-item button{width:auto;padding:4px 9px;font-size:0.78rem;border-radius:6px;flex-shrink:0;}
+  .empty-state{text-align:center;padding:15px;color:#9CA3AF;font-size:0.9rem;}
+</style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>FSRS 智慧單字卡</h1>
-        <p style="margin-top: 12px;">
-            <a href="index.html" style="display: inline-block; padding: 6px 16px; background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 20px; font-weight: 600; text-decoration: none; font-size: 0.9rem;">
-                ⬅️ 返回單字學習表
-            </a>
-        </p>
-    </header>
+  <header>
+    <p style="margin-bottom:4px;"><a class="back-link" href="index.html">⬅️ 返回單字學習表</a></p>
+    <div class="eyebrow">Spaced Repetition · FSRS</div>
+    <h1>智慧單字卡</h1>
+  </header>
 
-    <!-- 設定面板 -->
-    <div class="panel">
-        <div class="controls">
-            <div>
-                <label for="directionSelect">翻卡方向</label>
-                <select id="directionSelect">
-                    <option value="en2zh">英文 ➔ 中文</option>
-                    <option value="zh2en">中文 ➔ 英文</option>
-                </select>
-            </div>
-            <div>
-                <label for="voiceSelect">TTS 語音發音</label>
-                <select id="voiceSelect">
-                    <option value="">載入中...</option>
-                </select>
-            </div>
-        </div>
+  <div class="panel">
+    <div class="controls">
+      <div>
+        <label for="directionSelect">翻卡方向</label>
+        <select id="directionSelect">
+          <option value="en2zh">英文 ➔ 中文</option>
+          <option value="zh2en">中文 ➔ 英文</option>
+        </select>
+      </div>
+      <div>
+        <label for="voiceSelect">TTS 語音發音</label>
+        <select id="voiceSelect"><option value="">載入中...</option></select>
+      </div>
+    </div>
+    <div>
+      <label>匯入單字表 (格式: 英文,中文 每行一個)</label>
+      <input type="file" id="fileInput" accept=".txt,.csv" />
+    </div>
+  </div>
 
-        <div>
-            <label>匯入單字表 (格式: 英文,中文 每行一個)</label>
-            <input type="file" id="fileInput" accept=".txt,.csv" />
+  <div id="flashcardArea" style="display:none;">
+    <div class="card-header-bar">
+      <button class="shuffle-btn" onclick="shuffleQueue()">🔀 打亂單字</button>
+      <div class="progress-bar" id="progressBar">1 / 10</div>
+    </div>
+    <div class="progress-rail"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="card-container">
+      <div class="card" id="card" onclick="toggleFlip(event)">
+        <div class="card-face card-front">
+          <div class="card-tab" id="tabFront"></div>
+          <span class="tts-icon">🔊</span>
+          <div class="tts-zone" onclick="speakCurrent(event)"></div>
+          <div class="card-text" id="frontText"></div>
         </div>
+        <div class="card-face card-back">
+          <div class="card-tab" id="tabBack"></div>
+          <span class="tts-icon">🔊</span>
+          <div class="tts-zone" onclick="speakCurrent(event)"></div>
+          <div class="card-text" id="backText"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- 閃卡主區域 -->
-    <div id="flashcardArea" style="display:none;">
-        <div class="card-header-bar">
-            <button class="shuffle-btn" onclick="shuffleQueue()">🔀 打亂單字</button>
-            <div class="progress-bar" id="progressBar">1 / 10</div>
-        </div>
-
-        <div class="card-container">
-            <div class="card" id="card" onclick="toggleFlip(event)">
-                <!-- 正面 -->
-                <div class="card-face card-front">
-                    <span class="tts-icon">🔊 點擊發音</span>
-                    <div class="tts-zone" onclick="speakCurrent(event)"></div>
-                    <div class="card-text" id="frontText"></div>
-                </div>
-                <!-- 背面 -->
-                <div class="card-face card-back">
-                    <span class="tts-icon">🔊 點擊發音</span>
-                    <div class="tts-zone" onclick="speakCurrent(event)"></div>
-                    <div class="card-text" id="backText"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="action-btns-grid">
-            <div class="main-action-btns">
-                <button onclick="handleResponse('again')" style="background-color: var(--danger)">忘記 (Again)</button>
-                <button onclick="toggleFlip()" style="background-color: var(--primary)">翻轉卡片</button>
-                <button onclick="handleResponse('good')" style="background-color: var(--success)">記得 (Good)</button>
-            </div>
-            <button class="btn-secondary" id="btnPrevCard" onclick="prevCard()">⬅️ 返回上一張卡片</button>
-        </div>
+    <div class="action-btns-grid">
+      <div class="main-action-btns">
+        <button class="btn-danger" onclick="handleResponse('again')">忘記 (Again)</button>
+        <button onclick="toggleFlip()">翻轉卡片</button>
+        <button class="btn-success" onclick="handleResponse('good')">記得 (Good)</button>
+      </div>
+      <button class="btn-secondary" id="btnPrevCard" onclick="prevCard()">⬅️ 返回上一張卡片</button>
     </div>
+  </div>
 
-    <!-- 測驗完成結算面板 -->
-    <div id="completeArea" class="panel complete-panel" style="display:none;">
-        <h2>🎉 本輪測驗已完成！</h2>
-        <div class="summary-box">
-            <div class="summary-item">
-                <span>單字總數：</span>
-                <strong id="summaryTotal">0</strong>
-            </div>
-            <div class="summary-item">
-                <span>目前需要複習（已到期）：</span>
-                <strong id="summaryDue" style="color: var(--danger);">0</strong>
-            </div>
-            <div class="summary-item">
-                <span>記憶狀況良好（尚未到期）：</span>
-                <strong id="summaryLearning" style="color: var(--success);">0</strong>
-            </div>
-        </div>
-        
-        <p id="fsrsRecommendation" style="margin: 15px 0; font-size: 0.95rem; color: #4B5563;"></p>
-
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <button id="btnStartDueReview" class="btn-success" onclick="startTest(true)">開啟下一輪測驗 (複習到期單字)</button>
-            <button class="btn-primary" onclick="startTest(false)">強制重新練習全體單字</button>
-        </div>
+  <div id="completeArea" class="panel complete-panel" style="display:none;">
+    <h2>🎉 本輪測驗已完成！</h2>
+    <div class="summary-box">
+      <div class="summary-item"><span>單字總數：</span><strong id="summaryTotal">0</strong></div>
+      <div class="summary-item"><span>目前需要複習（已到期）：</span><strong id="summaryDue" style="color:var(--again);">0</strong></div>
+      <div class="summary-item"><span>記憶狀況良好（尚未到期）：</span><strong id="summaryLearning" style="color:var(--good);">0</strong></div>
     </div>
-
-    <!-- 單字庫管理面板 -->
-    <div class="panel">
-        <h3>目前單字庫 (<span id="cardCount">0</span>)</h3>
-        <div class="deck-list" id="deckList">
-            <div class="empty-state">目前沒有單字，請上傳檔案。</div>
-        </div>
-        <button class="btn-danger" style="margin-top: 10px;" onclick="clearDeck()">刪除全部單字庫</button>
+    <p id="fsrsRecommendation" style="margin:15px 0;font-size:0.95rem;color:var(--ink-soft);"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn-success" id="btnStartDueReview" onclick="startTest(true)">開啟下一輪測驗 (複習到期單字)</button>
+      <button onclick="startTest(false)">強制重新練習全體單字</button>
     </div>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin-top:0;">目前單字庫 (<span id="cardCount">0</span>)</h3>
+    <div class="deck-list" id="deckList">
+      <div class="empty-state">目前沒有單字，請上傳檔案。</div>
+    </div>
+    <button class="btn-danger" style="margin-top:10px;" onclick="clearDeck()">刪除全部單字庫</button>
+  </div>
 </div>
 
 <script>
-    // ==========================================
-    // 1. FSRS 演算法核心邏輯
-    // ==========================================
-    class FSRS {
-        constructor() {
-            this.w = [0.4, 0.6, 2.4, 5.8, 4.93, 0.94, 0.86, 0.01, 1.49, 0.14, 0.94, 2.18, 0.05, 0.34, 1.26, 0.29, 2.61];
-        }
+/* ============================================================
+   1. FSRS 核心：可依實際作答資料訓練權重
+   ============================================================ */
+const DECAY = -0.5, FACTOR = 19 / 81;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const round2 = v => Math.round(v * 100) / 100;
 
-        initCard() {
-            return {
-                stability: 0,
-                difficulty: 0,
-                elapsed_days: 0,
-                scheduled_days: 0,
-                repetition: 0,
-                state: 'New',
-                last_review: null
-            };
-        }
+const DEFAULT_PARAMS = {
+  initAgainS: 0.4,   // 首次「忘記」的初始穩定度
+  initGoodS: 2.4,    // 首次「記得」的初始穩定度
+  passGrowth: 0.94,  // 記得時穩定度成長係數
+  passDecay: 0.86,   // 穩定度越高，成長越慢的衰減率
+  passRFactor: 2.18, // 延遲越久才複習、記得時的額外增益
+  failFactor: 2.18,  // 忘記後重建穩定度的係數
+  failDDecay: 0.05,  // 難度對重建穩定度的影響
+  failSPower: 0.34,  // 舊穩定度對重建穩定度的影響冪次
+};
+const PARAM_BOUNDS = {
+  initAgainS:[0.05,5], initGoodS:[0.5,10], passGrowth:[-2,3], passDecay:[0.01,2],
+  passRFactor:[0.01,5], failFactor:[0.1,5], failDDecay:[0.01,2], failSPower:[0.01,2],
+};
 
-        next(card, rating) {
-            let s = card.stability;
-            let d = card.difficulty;
-            const now = new Date().toISOString();
+class FSRS {
+  constructor(params){ this.p = params; }
 
-            if (card.state === 'New') {
-                d = Math.max(1, Math.min(10, 8.25 - (rating - 3) * 1.5));
-                s = rating === 1 ? this.w[0] : this.w[2];
-                return {
-                    ...card,
-                    stability: s,
-                    difficulty: d,
-                    repetition: 1,
-                    state: 'Learning',
-                    last_review: now,
-                    scheduled_days: Math.round(s)
-                };
-            }
-
-            const next_d = Math.max(1, Math.min(10, d - 0.8 * (rating - 3)));
-            
-            let next_s = s;
-            if (rating === 1) { // 忘記
-                next_s = Math.max(0.1, this.w[11] * Math.pow(next_d, -this.w[12]) * (Math.pow(s + 1, this.w[13]) - 1));
-            } else { // 記得
-                next_s = s * (1 + Math.exp(this.w[8]) * (11 - next_d) * Math.pow(s, -this.w[9]));
-            }
-
-            return {
-                ...card,
-                stability: parseFloat(next_s.toFixed(2)),
-                difficulty: parseFloat(next_d.toFixed(2)),
-                repetition: card.repetition + 1,
-                state: 'Review',
-                last_review: now,
-                scheduled_days: Math.max(1, Math.round(next_s))
-            };
-        }
-
-        isDue(card) {
-            if (card.state === 'New' || !card.last_review) return true;
-            
-            const lastReviewDate = new Date(card.last_review);
-            const nextDueDate = new Date(lastReviewDate);
-            nextDueDate.setDate(nextDueDate.getDate() + card.scheduled_days);
-            
-            return new Date() >= nextDueDate;
-        }
+  static retrievability(elapsedDays, stability){
+    return Math.pow(1 + FACTOR * Math.max(0, elapsedDays) / stability, DECAY);
+  }
+  initCard(){
+    return { stability:0, difficulty:0, state:'new', lastReview:null, due:null, history:[] };
+  }
+  // rating: 1 = 忘記, 3 = 記得
+  next(card, rating, elapsedDays){
+    const p = this.p;
+    let s = card.stability, d = card.difficulty;
+    if (card.state === 'new'){
+      d = clamp(8.25 - (rating - 3) * 1.5, 1, 10);
+      s = rating === 1 ? p.initAgainS : p.initGoodS;
+    } else {
+      d = clamp(d - 0.8 * (rating - 3), 1, 10);
+      if (rating === 1){
+        s = Math.max(0.1, p.failFactor * Math.pow(d, -p.failDDecay) * (Math.pow(s + 1, p.failSPower) - 1));
+      } else {
+        const r = FSRS.retrievability(elapsedDays, s);
+        s = Math.max(0.1, s * (1 + Math.exp(p.passGrowth) * (11 - d) * Math.pow(s, -p.passDecay) * (Math.exp((1 - r) * p.passRFactor) - 1)));
+      }
     }
+    const now = Date.now();
+    const scheduledDays = Math.max(1, Math.round(s));
+    return { stability:round2(s), difficulty:round2(d), state:'review',
+      lastReview:now, due: now + scheduledDays * 86400000, history: card.history };
+  }
+  isDue(card){ return card.state === 'new' || !card.due || Date.now() >= card.due; }
+}
 
-    const fsrs = new FSRS();
-
-    // ==========================================
-    // 2. 資料管理 (LocalStorage)
-    // ==========================================
-    let deck = JSON.parse(localStorage.getItem('fsrs_deck')) || [];
-    let currentQueue = [];
-    let queueIndex = 0;
-    let isFlipped = false;
-
-    function saveDeck() {
-        localStorage.setItem('fsrs_deck', JSON.stringify(deck));
-        renderDeckList();
+// 用實際作答序列回放，計算目前權重的預測誤差 (binary cross-entropy)
+function evaluateLoss(params, histories){
+  const sim = new FSRS(params);
+  let total = 0, n = 0;
+  for (const hist of histories){
+    let card = sim.initCard();
+    for (const ev of hist){
+      if (card.state !== 'new'){
+        const r = clamp(FSRS.retrievability(ev.elapsedDays, card.stability), 1e-4, 1 - 1e-4);
+        const y = ev.rating === 1 ? 0 : 1;
+        total += -(y * Math.log(r) + (1 - y) * Math.log(1 - r));
+        n++;
+      }
+      card = sim.next(card, ev.rating, ev.elapsedDays);
     }
+  }
+  return n > 0 ? total / n : 0;
+}
 
-    // ==========================================
-    // 3. TTS 語音功能
-    // ==========================================
-    const synth = window.speechSynthesis;
-    const voiceSelect = document.getElementById('voiceSelect');
-    let voices = [];
+// 對每個權重做數值梯度下降，讓預測更貼近使用者的真實記憶曲線
+function trainParams(deck, baseParams){
+  const histories = deck.map(c => c.fsrs.history || []).filter(h => h.length > 1);
+  const totalEvents = histories.reduce((a, h) => a + h.length, 0);
+  if (totalEvents < 20) return baseParams;
 
-    function populateVoiceList() {
-        voices = synth.getVoices().filter(v => v.lang.includes('en'));
-        voiceSelect.innerHTML = '';
-        
-        const usVoices = voices.filter(v => v.lang.includes('US') || v.lang.includes('en-US'));
-        const ukVoices = voices.filter(v => v.lang.includes('GB') || v.lang.includes('en-GB'));
-        const otherVoices = voices.filter(v => !usVoices.includes(v) && !ukVoices.includes(v));
-
-        const addGroup = (label, list) => {
-            if (list.length === 0) return;
-            const group = document.createElement('optgroup');
-            group.label = label;
-            list.forEach(voice => {
-                const option = document.createElement('option');
-                option.textContent = `${voice.name} (${voice.lang})`;
-                option.value = voice.name;
-                group.appendChild(option);
-            });
-            voiceSelect.appendChild(group);
-        };
-
-        addGroup('美式英語 (US)', usVoices);
-        addGroup('英式英語 (UK)', ukVoices);
-        addGroup('其他英語', otherVoices);
+  let params = { ...baseParams };
+  const keys = Object.keys(params);
+  const eps = 0.02, lr = 0.1, epochs = 8;
+  for (let epoch = 0; epoch < epochs; epoch++){
+    const baseLoss = evaluateLoss(params, histories);
+    const grad = {};
+    for (const k of keys){
+      const trial = { ...params, [k]: params[k] + eps };
+      grad[k] = (evaluateLoss(trial, histories) - baseLoss) / eps;
     }
-
-    populateVoiceList();
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = populateVoiceList;
+    for (const k of keys){
+      params[k] = clamp(params[k] - lr * grad[k], PARAM_BOUNDS[k][0], PARAM_BOUNDS[k][1]);
     }
+  }
+  return params;
+}
 
-    function speakText(text) {
-        if (!text) return;
-        if (synth.speaking) synth.cancel();
-        const utterThis = new SpeechSynthesisUtterance(text);
-        const selectedOption = voiceSelect.value;
-        const selectedVoice = voices.find(v => v.name === selectedOption);
-        if (selectedVoice) {
-            utterThis.voice = selectedVoice;
-        }
-        synth.speak(utterThis);
-    }
+function scheduleTraining(){
+  clearTimeout(scheduleTraining._t);
+  scheduleTraining._t = setTimeout(() => {
+    fsrsParams = trainParams(deck, fsrsParams);
+    localStorage.setItem('fsrs_params', JSON.stringify(fsrsParams));
+    fsrs.p = fsrsParams;
+  }, 0);
+}
 
-    function speakCurrent(event) {
-        if (event) event.stopPropagation();
-        const currentCard = currentQueue[queueIndex];
-        if (!currentCard) return;
+/* ============================================================
+   2. 資料管理
+   ============================================================ */
+let fsrsParams = { ...DEFAULT_PARAMS, ...JSON.parse(localStorage.getItem('fsrs_params') || '{}') };
+const fsrs = new FSRS(fsrsParams);
 
-        const direction = document.getElementById('directionSelect').value;
-        let textToRead = "";
+function migrateCard(raw){
+  // 相容舊版資料格式
+  if (raw.fsrs && raw.fsrs.due === undefined){
+    const f = raw.fsrs;
+    const due = f.last_review
+      ? new Date(f.last_review).getTime() + (f.scheduled_days || 1) * 86400000
+      : null;
+    raw.fsrs = { stability:f.stability||0, difficulty:f.difficulty||0,
+      state: f.state === 'New' ? 'new' : 'review',
+      lastReview: f.last_review ? new Date(f.last_review).getTime() : null,
+      due, history: [] };
+  }
+  if (!raw.fsrs.history) raw.fsrs.history = [];
+  return raw;
+}
 
-        if (!isFlipped) {
-            textToRead = direction === 'en2zh' ? currentCard.en : currentCard.zh;
-        } else {
-            textToRead = direction === 'en2zh' ? currentCard.zh : currentCard.en;
-        }
+let deck = (JSON.parse(localStorage.getItem('fsrs_deck')) || []).map(migrateCard);
+let currentQueue = [];
+let queueIndex = 0;
+let isFlipped = false;
 
-        if (/[a-zA-Z]/.test(textToRead)) {
-            speakText(textToRead);
-        }
-    }
+function saveDeck(){
+  localStorage.setItem('fsrs_deck', JSON.stringify(deck));
+  renderDeckList();
+}
 
-    // ==========================================
-    // 4. 測驗佇列與流程控制
-    // ==========================================
-    const cardElem = document.getElementById('card');
-    const frontTextElem = document.getElementById('frontText');
-    const backTextElem = document.getElementById('backText');
+/* ============================================================
+   3. TTS 語音
+   ============================================================ */
+const synth = window.speechSynthesis;
+const voiceSelect = document.getElementById('voiceSelect');
+let voices = [];
 
-    function startTest(onlyDue = true) {
-        if (deck.length === 0) {
-            document.getElementById('flashcardArea').style.display = 'none';
-            document.getElementById('completeArea').style.display = 'none';
-            return;
-        }
-
-        if (onlyDue) {
-            currentQueue = deck.filter(card => fsrs.isDue(card.fsrs));
-            if (currentQueue.length === 0) {
-                currentQueue = [...deck].sort((a, b) => a.fsrs.stability - b.fsrs.stability);
-            }
-        } else {
-            currentQueue = [...deck];
-        }
-
-        queueIndex = 0;
-        document.getElementById('completeArea').style.display = 'none';
-        document.getElementById('flashcardArea').style.display = 'block';
-        renderCard();
-    }
-
-    function renderCard() {
-        if (queueIndex >= currentQueue.length) {
-            showCompleteScreen();
-            return;
-        }
-
-        const item = currentQueue[queueIndex];
-        const direction = document.getElementById('directionSelect').value;
-
-        if (direction === 'en2zh') {
-            frontTextElem.innerText = item.en;
-            backTextElem.innerText = item.zh;
-        } else {
-            frontTextElem.innerText = item.zh;
-            backTextElem.innerText = item.en;
-        }
-
-        document.getElementById('progressBar').innerText = `${queueIndex + 1} / ${currentQueue.length}`;
-        
-        // 控制「上一張」按鈕的啟用狀態
-        document.getElementById('btnPrevCard').disabled = (queueIndex === 0);
-        document.getElementById('btnPrevCard').style.opacity = (queueIndex === 0) ? '0.5' : '1';
-
-        isFlipped = false;
-        cardElem.classList.remove('flipped');
-    }
-
-    function toggleFlip(event) {
-        if (event && event.target.classList.contains('tts-zone')) return;
-        isFlipped = !isFlipped;
-        cardElem.classList.toggle('flipped', isFlipped);
-    }
-
-    document.getElementById('directionSelect').addEventListener('change', renderCard);
-
-    // 評分與 FSRS 演算 (Again=1, Good=3)
-    function handleResponse(type) {
-        if (currentQueue.length === 0) return;
-
-        const rating = type === 'again' ? 1 : 3;
-        const currentCard = currentQueue[queueIndex];
-        
-        const targetCard = deck.find(c => c.id === currentCard.id);
-        if (targetCard) {
-            targetCard.fsrs = fsrs.next(targetCard.fsrs, rating);
-            saveDeck();
-        }
-
-        queueIndex++;
-        renderCard();
-    }
-
-    // 返回上一張卡片
-    function prevCard() {
-        if (queueIndex > 0) {
-            queueIndex--;
-            renderCard();
-        }
-    }
-
-    // 打亂單字佇列 (Shuffle)
-    function shuffleQueue() {
-        if (currentQueue.length <= 1) return;
-        
-        // 將當前位置後面的剩餘卡片隨機打亂
-        const remaining = currentQueue.slice(queueIndex);
-        for (let i = remaining.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
-        }
-        
-        currentQueue = currentQueue.slice(0, queueIndex).concat(remaining);
-        renderCard();
-    }
-
-    function showCompleteScreen() {
-        document.getElementById('flashcardArea').style.display = 'none';
-        const completeArea = document.getElementById('completeArea');
-        completeArea.style.display = 'block';
-
-        const dueCards = deck.filter(c => fsrs.isDue(c.fsrs));
-        const learningCardsCount = deck.length - dueCards.length;
-
-        document.getElementById('summaryTotal').innerText = deck.length;
-        document.getElementById('summaryDue').innerText = dueCards.length;
-        document.getElementById('summaryLearning').innerText = learningCardsCount;
-
-        const btnStartDue = document.getElementById('btnStartDueReview');
-        const recommendationText = document.getElementById('fsrsRecommendation');
-
-        if (dueCards.length > 0) {
-            btnStartDue.style.display = 'block';
-            btnStartDue.innerText = `開始複習到期的 ${dueCards.length} 個單字`;
-            recommendationText.innerHTML = `💡 <b>FSRS 演算法建議：</b>有 <b>${dueCards.length}</b> 個單字記憶強度已低於臨界點，建議立即進行複習！`;
-        } else {
-            btnStartDue.style.display = 'none';
-            recommendationText.innerHTML = `🎉 <b>太棒了！</b> 目前所有單字都在最佳記憶狀態中，無需立即複習！`;
-        }
-    }
-
-    // ==========================================
-    // 5. 檔案上傳與單字庫管理（修正解析切分邏輯）
-    // ==========================================
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
-            const lines = content.split('\n');
-            let newCards = 0;
-
-            lines.forEach(line => {
-                if (!line.trim()) return;
-
-                // 僅對第一個逗號、全形逗號或 Tab 進行切割
-                const match = line.match(/[,，\t]/);
-                if (match) {
-                    const splitIndex = match.index;
-                    const en = line.substring(0, splitIndex).trim();
-                    const zh = line.substring(splitIndex + 1).trim();
-
-                    if (en && zh) {
-                        deck.push({
-                            id: Date.now() + Math.random(),
-                            en: en,
-                            zh: zh,
-                            fsrs: fsrs.initCard()
-                        });
-                        newCards++;
-                    }
-                }
-            });
-
-            if (newCards > 0) {
-                saveDeck();
-                startTest(true);
-                alert(`成功匯入 ${newCards} 個單字！`);
-            } else {
-                alert('解析失敗，請確認檔案格式為每行「英文,中文」');
-            }
-        };
-        reader.readAsText(file);
+function populateVoiceList(){
+  voices = synth.getVoices().filter(v => v.lang.includes('en'));
+  voiceSelect.innerHTML = '';
+  const groups = {
+    '美式英語 (US)': voices.filter(v => v.lang.includes('US')),
+    '英式英語 (UK)': voices.filter(v => v.lang.includes('GB')),
+  };
+  groups['其他英語'] = voices.filter(v => !groups['美式英語 (US)'].includes(v) && !groups['英式英語 (UK)'].includes(v));
+  for (const [label, list] of Object.entries(groups)){
+    if (!list.length) continue;
+    const group = document.createElement('optgroup');
+    group.label = label;
+    list.forEach(v => {
+      const opt = document.createElement('option');
+      opt.textContent = `${v.name} (${v.lang})`;
+      opt.value = v.name;
+      group.appendChild(opt);
     });
+    voiceSelect.appendChild(group);
+  }
+}
+populateVoiceList();
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = populateVoiceList;
 
-    function renderDeckList() {
-        const deckListElem = document.getElementById('deckList');
-        document.getElementById('cardCount').innerText = deck.length;
+function speakText(text){
+  if (!text) return;
+  if (synth.speaking) synth.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  const voice = voices.find(v => v.name === voiceSelect.value);
+  if (voice) utter.voice = voice;
+  synth.speak(utter);
+}
 
-        if (deck.length === 0) {
-            deckListElem.innerHTML = '<div class="empty-state">目前沒有單字，請上傳檔案。</div>';
-            return;
-        }
+function speakCurrent(event){
+  if (event) event.stopPropagation();
+  const item = currentQueue[queueIndex];
+  if (!item) return;
+  const direction = document.getElementById('directionSelect').value;
+  const text = (!isFlipped) === (direction === 'en2zh') ? item.en : item.zh;
+  if (/[a-zA-Z]/.test(text)) speakText(text);
+}
 
-        deckListElem.innerHTML = '';
-        deck.forEach((item, idx) => {
-            const isDue = fsrs.isDue(item.fsrs);
-            const statusTag = isDue ? '<span style="color:var(--danger); font-size:0.8rem; margin-left:8px;">[待複習]</span>' : '';
-            
-            const div = document.createElement('div');
-            div.className = 'deck-item';
-            div.innerHTML = `
-                <span><strong>${item.en}</strong> - ${item.zh} ${statusTag}</span>
-                <button class="btn-danger" style="width:auto; padding: 4px 8px;" onclick="deleteCard(${idx})">刪除</button>
-            `;
-            deckListElem.appendChild(div);
-        });
+/* ============================================================
+   4. 測驗流程
+   ============================================================ */
+const cardElem = document.getElementById('card');
+const frontTextElem = document.getElementById('frontText');
+const backTextElem = document.getElementById('backText');
+
+function startTest(onlyDue = true){
+  document.getElementById('completeArea').style.display = 'none';
+  if (deck.length === 0){
+    document.getElementById('flashcardArea').style.display = 'none';
+    return;
+  }
+  currentQueue = onlyDue ? deck.filter(c => fsrs.isDue(c.fsrs)) : [...deck];
+  if (onlyDue && currentQueue.length === 0){
+    currentQueue = [...deck].sort((a, b) => a.fsrs.stability - b.fsrs.stability);
+  }
+  queueIndex = 0;
+  document.getElementById('flashcardArea').style.display = 'block';
+  renderCard();
+}
+
+// 依容器大小自動縮小字體，避免長單字/長句溢出卡片
+function autoFitText(el, text){
+  el.style.fontSize = '2.2rem';
+  el.textContent = text;
+  const box = el.parentElement;
+  let size = 35;
+  el.style.fontSize = size + 'px';
+  while (size > 13 && (el.scrollHeight > box.clientHeight || el.scrollWidth > box.clientWidth)){
+    size -= 1;
+    el.style.fontSize = size + 'px';
+  }
+}
+
+function renderCard(){
+  if (queueIndex >= currentQueue.length){ showCompleteScreen(); return; }
+  const item = currentQueue[queueIndex];
+  const direction = document.getElementById('directionSelect').value;
+  const [frontWord, backWord] = direction === 'en2zh' ? [item.en, item.zh] : [item.zh, item.en];
+  autoFitText(frontTextElem, frontWord);
+  autoFitText(backTextElem, backWord);
+
+  document.getElementById('progressBar').innerText = `${queueIndex + 1} / ${currentQueue.length}`;
+  document.getElementById('progressFill').style.width = `${(queueIndex / currentQueue.length) * 100}%`;
+  document.getElementById('tabFront').innerText = `${queueIndex + 1}/${currentQueue.length}`;
+  document.getElementById('tabBack').innerText = `${queueIndex + 1}/${currentQueue.length}`;
+
+  const prevBtn = document.getElementById('btnPrevCard');
+  prevBtn.disabled = queueIndex === 0;
+
+  isFlipped = false;
+  cardElem.classList.remove('flipped');
+}
+
+function toggleFlip(event){
+  if (event && event.target.classList.contains('tts-zone')) return;
+  isFlipped = !isFlipped;
+  cardElem.classList.toggle('flipped', isFlipped);
+}
+document.getElementById('directionSelect').addEventListener('change', renderCard);
+window.addEventListener('resize', () => {
+  if (document.getElementById('flashcardArea').style.display !== 'none') renderCard();
+});
+
+function handleResponse(type){
+  if (!currentQueue.length) return;
+  const rating = type === 'again' ? 1 : 3;
+  const target = deck.find(c => c.id === currentQueue[queueIndex].id);
+  if (target){
+    const elapsedDays = target.fsrs.lastReview ? (Date.now() - target.fsrs.lastReview) / 86400000 : 0;
+    if (target.fsrs.state !== 'new') target.fsrs.history.push({ rating, elapsedDays });
+    target.fsrs = { ...fsrs.next(target.fsrs, rating, elapsedDays), history: target.fsrs.history };
+    saveDeck();
+    scheduleTraining();
+  }
+  queueIndex++;
+  renderCard();
+}
+
+function prevCard(){
+  if (queueIndex > 0){ queueIndex--; renderCard(); }
+}
+
+function shuffleQueue(){
+  if (currentQueue.length <= 1) return;
+  const remaining = currentQueue.slice(queueIndex);
+  for (let i = remaining.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+  }
+  currentQueue = currentQueue.slice(0, queueIndex).concat(remaining);
+  renderCard();
+}
+
+function showCompleteScreen(){
+  document.getElementById('flashcardArea').style.display = 'none';
+  document.getElementById('completeArea').style.display = 'block';
+
+  const dueCards = deck.filter(c => fsrs.isDue(c.fsrs));
+  document.getElementById('summaryTotal').innerText = deck.length;
+  document.getElementById('summaryDue').innerText = dueCards.length;
+  document.getElementById('summaryLearning').innerText = deck.length - dueCards.length;
+
+  const btn = document.getElementById('btnStartDueReview');
+  const note = document.getElementById('fsrsRecommendation');
+  if (dueCards.length > 0){
+    btn.style.display = 'block';
+    btn.innerText = `開始複習到期的 ${dueCards.length} 個單字`;
+    note.innerHTML = `💡 <b>FSRS 演算法建議：</b>有 <b>${dueCards.length}</b> 個單字記憶強度已低於臨界點，建議立即複習！`;
+  } else {
+    btn.style.display = 'none';
+    note.innerHTML = `🎉 <b>太棒了！</b>目前所有單字都在最佳記憶狀態中，無需立即複習！`;
+  }
+}
+
+/* ============================================================
+   5. 檔案匯入與單字庫管理
+   ============================================================ */
+document.getElementById('fileInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const lines = e.target.result.split('\n');
+    let added = 0;
+    lines.forEach(line => {
+      if (!line.trim()) return;
+      const [en, zh] = line.split(/[,，\t]/).map(s => s && s.trim());
+      if (en && zh){
+        deck.push({ id: Date.now() + Math.random(), en, zh, fsrs: fsrs.initCard() });
+        added++;
+      }
+    });
+    if (added > 0){
+      saveDeck();
+      startTest(true);
+      alert(`成功匯入 ${added} 個單字！`);
+    } else {
+      alert('解析失敗，請確認檔案格式為每行「英文,中文」');
     }
+  };
+  reader.readAsText(file);
+});
 
-    function deleteCard(index) {
-        deck.splice(index, 1);
-        saveDeck();
-        startTest(true);
-    }
+function renderDeckList(){
+  const el = document.getElementById('deckList');
+  document.getElementById('cardCount').innerText = deck.length;
+  if (deck.length === 0){
+    el.innerHTML = '<div class="empty-state">目前沒有單字，請上傳檔案。</div>';
+    return;
+  }
+  el.innerHTML = '';
+  deck.forEach((item, idx) => {
+    const due = fsrs.isDue(item.fsrs);
+    const strength = clamp(item.fsrs.stability / 30, 0, 1) * 100;
+    const div = document.createElement('div');
+    div.className = 'deck-item';
+    div.innerHTML = `
+      <div class="deck-item-main">
+        <div class="deck-item-word"><strong>${item.en}</strong> - ${item.zh}${due ? '<span class="due-tag">待複習</span>' : ''}</div>
+        <div class="strength-meter"><div class="strength-fill" style="width:${strength}%"></div></div>
+      </div>
+      <button class="btn-danger" onclick="deleteCard(${idx})">刪除</button>`;
+    el.appendChild(div);
+  });
+}
 
-    function clearDeck() {
-        if (confirm('確定要清空所有單字庫嗎？此操作無法復原。')) {
-            deck = [];
-            saveDeck();
-            document.getElementById('flashcardArea').style.display = 'none';
-            document.getElementById('completeArea').style.display = 'none';
-        }
-    }
+function deleteCard(index){
+  deck.splice(index, 1);
+  saveDeck();
+  startTest(true);
+}
 
-    // 初始化載入
-    renderDeckList();
-    startTest(true);
+function clearDeck(){
+  if (confirm('確定要清空所有單字庫嗎？此操作無法復原。')){
+    deck = [];
+    saveDeck();
+    document.getElementById('flashcardArea').style.display = 'none';
+    document.getElementById('completeArea').style.display = 'none';
+  }
+}
+
+renderDeckList();
+startTest(true);
 </script>
 </body>
 </html>
