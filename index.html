@@ -432,7 +432,7 @@ bearing on | phr. 與…有關、對…有影響；句型：have a bearing on so
         const rows = document.querySelectorAll('#vocabTableBody tr');
         if (rows[currentReadingIndex]) {
             rows[currentReadingIndex].classList.add('reading-active');
-            rows[currentReadingIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // 移除了 scrollIntoView 滾動程式碼，讓頁面保持原本的位置
         }
 
         const wordToRead = activeWordsList[currentReadingIndex];
@@ -440,7 +440,6 @@ bearing on | phr. 與…有關、對…有影響；句型：have a bearing on so
         speakWord(wordToRead, () => {
             if (!isReadingAll) return;
             currentReadingIndex++;
-            // Dynamic delay based on rate
             const rate = parseFloat(document.getElementById('rateSelect').value) || 1.0;
             const delay = 600 / rate; 
             setTimeout(readNextInSequence, delay);
