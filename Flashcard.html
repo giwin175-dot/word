@@ -81,15 +81,23 @@
             border: none;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, transform 0.1s;
         }
 
         button:hover {
             background-color: var(--primary-hover);
         }
 
+        button:active {
+            transform: scale(0.98);
+        }
+
         button.btn-danger {
             background-color: var(--danger);
+        }
+
+        button.btn-success {
+            background-color: var(--success);
         }
 
         /* 閃卡區域 */
@@ -105,11 +113,10 @@
             height: 100%;
             position: absolute;
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 16px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             cursor: pointer;
-            touch-action: none;
         }
 
         .card.flipped {
@@ -138,7 +145,7 @@
         }
 
         .card-text {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: bold;
             text-align: center;
             word-break: break-word;
@@ -168,36 +175,71 @@
             right: 15px;
             font-size: 1.2rem;
             opacity: 0.5;
+            pointer-events: none;
         }
 
-        .sub-text {
-            font-size: 0.9rem;
-            color: #6B7280;
-            margin-top: 10px;
-        }
-
-        /* 翻轉與操作提示按鈕 */
+        /* 操作提示按鈕欄位 */
         .action-btns {
-            display: flex;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
             margin-top: 15px;
+        }
+
+        .action-btns button {
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 8px;
         }
 
         .badge {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
             font-size: 0.75rem;
-            background: #E5E7EB;
-            margin-top: 10px;
+            background: #F3F4F6;
+            color: #4B5563;
+            margin-top: 15px;
+            border: 1px solid #E5E7EB;
         }
 
-        .swipe-hint {
+        .progress-bar {
+            font-size: 0.85rem;
+            color: #6B7280;
+            text-align: right;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        /* 結算畫面 */
+        .complete-panel {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .complete-panel h2 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+
+        .summary-box {
+            background: #F9FAFB;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #E5E7EB;
+            text-align: left;
+        }
+
+        .summary-item {
             display: flex;
             justify-content: space-between;
-            font-size: 0.8rem;
-            color: #6B7280;
-            margin-top: 5px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .summary-item:last-child {
+            margin-bottom: 0;
         }
 
         /* 單字清單預覽與管理 */
@@ -223,7 +265,7 @@
 
         .empty-state {
             text-align: center;
-            padding: 4px;
+            padding: 15px;
             color: #9CA3AF;
         }
     </style>
@@ -233,11 +275,11 @@
 <div class="container">
     <header>
         <h1>FSRS 智慧單字卡</h1>
-            <p style="margin-top: 12px;">
-        <a href="index.html" style="display: inline-block; padding: 6px 16px; background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 20px; font-weight: 600; text-decoration: none; font-size: 0.9rem;">
-            ⬅️ 返回單字學習表
-        </a>
-    </p>
+        <p style="margin-top: 12px;">
+            <a href="index.html" style="display: inline-block; padding: 6px 16px; background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 20px; font-weight: 600; text-decoration: none; font-size: 0.9rem;">
+                ⬅️ 返回單字學習表
+            </a>
+        </p>
     </header>
 
     <!-- 設定面板 -->
@@ -266,14 +308,14 @@
 
     <!-- 閃卡主區域 -->
     <div id="flashcardArea" style="display:none;">
+        <div class="progress-bar" id="progressBar">1 / 10</div>
         <div class="card-container">
-            <div class="card" id="card">
+            <div class="card" id="card" onclick="toggleFlip(event)">
                 <!-- 正面 -->
                 <div class="card-face card-front">
                     <span class="tts-icon">🔊 點擊發音</span>
                     <div class="tts-zone" onclick="speakCurrent(event)"></div>
                     <div class="card-text" id="frontText"></div>
-                    <div class="sub-text">正面</div>
                 </div>
                 <!-- 背面 -->
                 <div class="card-face card-back">
@@ -285,15 +327,36 @@
             </div>
         </div>
 
-        <div class="swipe-hint">
-            <span>👈 左滑：忘記 (Again)</span>
-            <span>👉 右滑：記得 (Good)</span>
-        </div>
-
         <div class="action-btns">
-            <button onclick="handleResponse('again')" style="background-color: var(--danger)">忘記 (左滑)</button>
-            <button onclick="flipCard()">翻轉卡片</button>
-            <button onclick="handleResponse('good')" style="background-color: var(--success)">記得 (右滑)</button>
+            <button onclick="handleResponse('again')" style="background-color: var(--danger)">忘記 (Again)</button>
+            <button onclick="toggleFlip()" style="background-color: var(--primary)">翻轉卡片</button>
+            <button onclick="handleResponse('good')" style="background-color: var(--success)">記得 (Good)</button>
+        </div>
+    </div>
+
+    <!-- 測驗完成結算面板 -->
+    <div id="completeArea" class="panel complete-panel" style="display:none;">
+        <h2>🎉 本輪測驗已完成！</h2>
+        <div class="summary-box">
+            <div class="summary-item">
+                <span>單字總數：</span>
+                <strong id="summaryTotal">0</strong>
+            </div>
+            <div class="summary-item">
+                <span>目前需要複習（已到期）：</span>
+                <strong id="summaryDue" style="color: var(--danger);">0</strong>
+            </div>
+            <div class="summary-item">
+                <span>記憶狀況良好（尚未到期）：</span>
+                <strong id="summaryLearning" style="color: var(--success);">0</strong>
+            </div>
+        </div>
+        
+        <p id="fsrsRecommendation" style="margin: 15px 0; font-size: 0.95rem; color: #4B5563;"></p>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button id="btnStartDueReview" class="btn-success" onclick="startTest(true)">開啟下一輪測驗 (複習到期單字)</button>
+            <button class="btn-primary" onclick="startTest(false)">強制重新練習全體單字</button>
         </div>
     </div>
 
@@ -309,15 +372,13 @@
 
 <script>
     // ==========================================
-    // 1. FSRS-6 簡化演算法核心 logic
+    // 1. FSRS 演算法核心邏輯
     // ==========================================
-    // 基於 Anki FSRS 演算法的精神實作的核心公式
     class FSRS {
         constructor() {
             this.w = [0.4, 0.6, 2.4, 5.8, 4.93, 0.94, 0.86, 0.01, 1.49, 0.14, 0.94, 2.18, 0.05, 0.34, 1.26, 0.29, 2.61];
         }
 
-        // 初始化新卡片
         initCard() {
             return {
                 stability: 0,
@@ -325,12 +386,11 @@
                 elapsed_days: 0,
                 scheduled_days: 0,
                 repetition: 0,
-                state: 'New', // New, Learning, Review
+                state: 'New',
                 last_review: null
             };
         }
 
-        // 核心更新公式: rating (1:忘記/Again, 3:記得/Good)
         next(card, rating) {
             let s = card.stability;
             let d = card.difficulty;
@@ -350,14 +410,12 @@
                 };
             }
 
-            // 更新難度 D
             const next_d = Math.max(1, Math.min(10, d - 0.8 * (rating - 3)));
             
-            // 更新穩定度 S
             let next_s = s;
-            if (rating === 1) { // 忘記 (Again)
+            if (rating === 1) { // 忘記
                 next_s = Math.max(0.1, this.w[11] * Math.pow(next_d, -this.w[12]) * (Math.pow(s + 1, this.w[13]) - 1));
-            } else { // 記得 (Good)
+            } else { // 記得
                 next_s = s * (1 + Math.exp(this.w[8]) * (11 - next_d) * Math.pow(s, -this.w[9]));
             }
 
@@ -371,6 +429,17 @@
                 scheduled_days: Math.max(1, Math.round(next_s))
             };
         }
+
+        // 判斷卡片目前是否已到期（需要複習）
+        isDue(card) {
+            if (card.state === 'New' || !card.last_review) return true;
+            
+            const lastReviewDate = new Date(card.last_review);
+            const nextDueDate = new Date(lastReviewDate);
+            nextDueDate.setDate(nextDueDate.getDate() + card.scheduled_days);
+            
+            return new Date() >= nextDueDate;
+        }
     }
 
     const fsrs = new FSRS();
@@ -379,7 +448,8 @@
     // 2. 資料管理 (LocalStorage)
     // ==========================================
     let deck = JSON.parse(localStorage.getItem('fsrs_deck')) || [];
-    let currentIndex = 0;
+    let currentQueue = []; // 當前輪次的單字佇列
+    let queueIndex = 0;
     let isFlipped = false;
 
     function saveDeck() {
@@ -426,7 +496,8 @@
     }
 
     function speakText(text) {
-        if (!text || synth.speaking) synth.cancel(); // 停止先前的發音
+        if (!text) return;
+        if (synth.speaking) synth.cancel();
         const utterThis = new SpeechSynthesisUtterance(text);
         const selectedOption = voiceSelect.value;
         const selectedVoice = voices.find(v => v.name === selectedOption);
@@ -437,8 +508,8 @@
     }
 
     function speakCurrent(event) {
-        if(event) event.stopPropagation(); // 阻止觸發卡片翻轉
-        const currentCard = deck[currentIndex];
+        if (event) event.stopPropagation();
+        const currentCard = currentQueue[queueIndex];
         if (!currentCard) return;
 
         const direction = document.getElementById('directionSelect').value;
@@ -450,28 +521,50 @@
             textToRead = direction === 'en2zh' ? currentCard.zh : currentCard.en;
         }
 
-        // 僅朗讀包含英文字元的部分
         if (/[a-zA-Z]/.test(textToRead)) {
             speakText(textToRead);
         }
     }
 
     // ==========================================
-    // 4. 卡片互動 logic
+    // 4. 測驗佇列與流程控制
     // ==========================================
     const cardElem = document.getElementById('card');
     const frontTextElem = document.getElementById('frontText');
     const backTextElem = document.getElementById('backText');
     const fsrsStatsElem = document.getElementById('fsrsStats');
 
-    function renderCard() {
+    // 開啟新測驗：onlyDue = true (僅測驗到期/忘記的), false (全部測驗)
+    function startTest(onlyDue = true) {
         if (deck.length === 0) {
             document.getElementById('flashcardArea').style.display = 'none';
+            document.getElementById('completeArea').style.display = 'none';
             return;
         }
-        document.getElementById('flashcardArea').style.display = 'block';
 
-        const item = deck[currentIndex];
+        if (onlyDue) {
+            currentQueue = deck.filter(card => fsrs.isDue(card.fsrs));
+            // 若無到期，則退回取穩定度最低的前幾個
+            if (currentQueue.length === 0) {
+                currentQueue = [...deck].sort((a, b) => a.fsrs.stability - b.fsrs.stability);
+            }
+        } else {
+            currentQueue = [...deck];
+        }
+
+        queueIndex = 0;
+        document.getElementById('completeArea').style.display = 'none';
+        document.getElementById('flashcardArea').style.display = 'block';
+        renderCard();
+    }
+
+    function renderCard() {
+        if (queueIndex >= currentQueue.length) {
+            showCompleteScreen();
+            return;
+        }
+
+        const item = currentQueue[queueIndex];
         const direction = document.getElementById('directionSelect').value;
 
         if (direction === 'en2zh') {
@@ -482,84 +575,67 @@
             backTextElem.innerText = item.en;
         }
 
+        document.getElementById('progressBar').innerText = `${queueIndex + 1} / ${currentQueue.length}`;
         fsrsStatsElem.innerText = `穩定度: ${item.fsrs.stability} | 難度: ${item.fsrs.difficulty} | 下次複習: ${item.fsrs.scheduled_days}天後`;
         
-        // 重設卡片翻轉狀態
         isFlipped = false;
         cardElem.classList.remove('flipped');
     }
 
-    function flipCard() {
+    function toggleFlip(event) {
+        if (event && event.target.classList.contains('tts-zone')) return;
         isFlipped = !isFlipped;
-        cardElem.classList.toggle('flipped');
+        cardElem.classList.toggle('flipped', isFlipped);
     }
 
     document.getElementById('directionSelect').addEventListener('change', renderCard);
 
-    // 評分與 FSRS 演算邏輯 (Again=1, Good=3)
+    // 評分與 FSRS 演算 (Again=1, Good=3)
     function handleResponse(type) {
-        if (deck.length === 0) return;
+        if (currentQueue.length === 0) return;
 
         const rating = type === 'again' ? 1 : 3;
-        const card = deck[currentIndex];
+        const currentCard = currentQueue[queueIndex];
         
-        // 經由 FSRS 更新狀態
-        card.fsrs = fsrs.next(card.fsrs, rating);
-        saveDeck();
+        // 找出原單字庫中的對應卡片並更新
+        const targetCard = deck.find(c => c.id === currentCard.id);
+        if (targetCard) {
+            targetCard.fsrs = fsrs.next(targetCard.fsrs, rating);
+            saveDeck();
+        }
 
-        // 切換至下一張卡片
-        currentIndex = (currentIndex + 1) % deck.length;
+        queueIndex++;
         renderCard();
     }
 
-    // ==========================================
-    // 5. 滑動卡片機制 (Swipe Interaction)
-    // ==========================================
-    let startX = 0;
-    let currentX = 0;
-    let isDragging = false;
+    // 展示測驗完成與 FSRS 分析結算畫面
+    function showCompleteScreen() {
+        document.getElementById('flashcardArea').style.display = 'none';
+        const completeArea = document.getElementById('completeArea');
+        completeArea.style.display = 'block';
 
-    cardElem.addEventListener('pointerdown', (e) => {
-        // 如果點擊的是 TTS zone 就不觸發滑動
-        if(e.target.classList.contains('tts-zone')) return;
-        
-        isDragging = true;
-        startX = e.clientX;
-        cardElem.style.transition = 'none';
-    });
+        const dueCards = deck.filter(c => fsrs.isDue(c.fsrs));
+        const learningCardsCount = deck.length - dueCards.length;
 
-    document.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
-        currentX = e.clientX - startX;
-        const rotate = currentX * 0.05;
-        cardElem.style.transform = `translateX(${currentX}px) rotate(${rotate}deg) ${isFlipped ? 'rotateY(180deg)' : ''}`;
-    });
+        document.getElementById('summaryTotal').innerText = deck.length;
+        document.getElementById('summaryDue').innerText = dueCards.length;
+        document.getElementById('summaryLearning').innerText = learningCardsCount;
 
-    document.addEventListener('pointerup', () => {
-        if (!isDragging) return;
-        isDragging = false;
-        cardElem.style.transition = 'transform 0.5s ease';
+        const btnStartDue = document.getElementById('btnStartDueReview');
+        const recommendationText = document.getElementById('fsrsRecommendation');
 
-        if (currentX > 100) { // 右滑 -> 記得
-            handleResponse('good');
-        } else if (currentX < -100) { // 左滑 -> 忘記
-            handleResponse('again');
+        if (dueCards.length > 0) {
+            btnStartDue.style.display = 'block';
+            btnStartDue.innerText = `開始複習到期的 ${dueCards.length} 個單字`;
+            recommendationText.innerHTML = `💡 <b>FSRS 演算法建議：</b>有 <b>${dueCards.length}</b> 個單字記憶強度已低於臨界點，建議立即進行複習！`;
         } else {
-            // 回到原位
-            cardElem.style.transform = isFlipped ? 'rotateY(180deg)' : 'none';
+            btnStartDue.style.display = 'none';
+            recommendationText.innerHTML = `🎉 <b>太棒了！</b> 目前所有單字都在最佳記憶狀態中，無需立即複習！`;
         }
-        currentX = 0;
-    });
-
-    // 點擊卡片翻轉 (若未發生顯著滑動)
-    cardElem.addEventListener('click', (e) => {
-        if (Math.abs(currentX) < 5 && !e.target.classList.contains('tts-zone')) {
-            flipCard();
-        }
-    });
+    }
 
     // ==========================================
-    // 6. 檔案上傳與單字庫管理
+    // 5. 檔案上傳與單字庫管理
     // ==========================================
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -572,7 +648,6 @@
             let newCards = 0;
 
             lines.forEach(line => {
-                // 支援 逗號, 頓號, 或 Tab 分割格式
                 const parts = line.split(/[,，\t]/);
                 if (parts.length >= 2) {
                     const en = parts[0].trim();
@@ -591,8 +666,7 @@
 
             if (newCards > 0) {
                 saveDeck();
-                currentIndex = deck.length - newCards;
-                renderCard();
+                startTest(true);
                 alert(`成功匯入 ${newCards} 個單字！`);
             } else {
                 alert('解析失敗，請確認檔案格式為每行「英文,中文」');
@@ -612,10 +686,13 @@
 
         deckListElem.innerHTML = '';
         deck.forEach((item, idx) => {
+            const isDue = fsrs.isDue(item.fsrs);
+            const statusTag = isDue ? '<span style="color:var(--danger); font-size:0.8rem; margin-left:8px;">[待複習]</span>' : '';
+            
             const div = document.createElement('div');
             div.className = 'deck-item';
             div.innerHTML = `
-                <span><strong>${item.en}</strong> - ${item.zh}</span>
+                <span><strong>${item.en}</strong> - ${item.zh} ${statusTag}</span>
                 <button class="btn-danger" style="width:auto; padding: 4px 8px;" onclick="deleteCard(${idx})">刪除</button>
             `;
             deckListElem.appendChild(div);
@@ -624,24 +701,22 @@
 
     function deleteCard(index) {
         deck.splice(index, 1);
-        if (currentIndex >= deck.length) currentIndex = Math.max(0, deck.length - 1);
         saveDeck();
-        renderCard();
+        startTest(true);
     }
 
     function clearDeck() {
         if (confirm('確定要清空所有單字庫嗎？此操作無法復原。')) {
             deck = [];
-            currentIndex = 0;
             saveDeck();
-            renderCard();
+            document.getElementById('flashcardArea').style.display = 'none';
+            document.getElementById('completeArea').style.display = 'none';
         }
     }
 
     // 初始化載入
     renderDeckList();
-    renderCard();
-
+    startTest(true);
 </script>
 </body>
 </html>
