@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>互動式英語單字朗讀與學習網頁</title>
+    <title>Interactive Vocabulary Reader & Learning Tool</title>
     <style>
         :root {
             --primary-color: #4f46e5;
@@ -15,6 +15,7 @@
             --border-color: #e2e8f0;
             --accent-bg: #eff6ff;
             --accent-border: #bfdbfe;
+            --active-row-bg: #e0e7ff;
         }
 
         * {
@@ -51,7 +52,7 @@
             color: var(--text-muted);
         }
 
-        /* 控制面板 */
+        /* Control Panel */
         .control-panel {
             background: var(--card-bg);
             padding: 1.5rem;
@@ -59,7 +60,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             margin-bottom: 1.5rem;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.25rem;
             align-items: end;
         }
@@ -90,7 +91,7 @@
             border-color: var(--primary-color);
         }
 
-        /* 輸入與上傳區 */
+        /* Input & Upload Section */
         .input-section {
             background: var(--card-bg);
             padding: 1.5rem;
@@ -105,11 +106,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         textarea {
             width: 100%;
-            height: 100px;
+            height: 110px;
             resize: vertical;
             font-family: monospace;
             margin-bottom: 1rem;
@@ -130,6 +133,10 @@
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
         }
 
         button:hover {
@@ -145,7 +152,21 @@
             background-color: #cbd5e1;
         }
 
-        /* 單字表格區 */
+        button.danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        button.danger:hover {
+            background-color: #dc2626;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Vocabulary Table Area */
         .table-container {
             background: var(--card-bg);
             border-radius: 12px;
@@ -170,11 +191,19 @@
             color: #475569;
         }
 
+        tr {
+            transition: background-color 0.3s;
+        }
+
+        tr.reading-active {
+            background-color: var(--active-row-bg) !important;
+        }
+
         tr:last-child td {
             border-bottom: none;
         }
 
-        /* 可點擊點發音區塊 (透明浮層 / 點擊亮燈) */
+        /* Interactive Word Click Zone */
         .word-interactive-zone {
             position: relative;
             display: inline-block;
@@ -204,31 +233,13 @@
             color: var(--primary-color);
         }
 
-        .word-phonetic {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-left: 0.5rem;
-        }
-
-        .usage-badge {
-            display: inline-block;
-            background-color: #f1f5f9;
-            color: #334155;
-            font-size: 0.85rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            margin-right: 0.5rem;
-            font-weight: 600;
-        }
-
         .usage-text {
             color: #334155;
             font-size: 0.95rem;
         }
 
         .hint-tag {
-            font-size: 0.75rem;
-            color: #94a3b8;
+            font-size: 0.8rem;
             margin-left: 0.5rem;
         }
 
@@ -243,93 +254,103 @@
 
 <div class="container">
     <header>
-        <h1>互動式英語單字學習表</h1>
-        <p>上傳或貼上單字表，點擊單字區塊即可發音朗讀</p>
-           <p style="margin-top: 12px;">
+        <h1>Interactive Vocabulary Reader</h1>
+        <p>Upload or paste your vocabulary list. Click a word or use autoplay to practice pronunciation.</p>
+        <p style="margin-top: 12px;">
             <a href="Flashcard.html" style="display: inline-block; padding: 6px 16px; background-color: #eff6ff; color: #4f46e5; border: 1px solid #bfdbfe; border-radius: 20px; font-weight: 600; text-decoration: none; font-size: 0.9rem;">
-            切換至 Flashcard
+            Switch to Flashcard
             </a>
         </p>     
     </header>
 
-    <!-- 控制選單：口音與語速 -->
+    <!-- Control Panel -->
     <div class="control-panel">
         <div class="form-group">
-            <label for="voiceSelect">🎙️ 英語口音選單 (TTS)</label>
+            <label for="voiceSelect">🎙️ English Voice (TTS)</label>
             <select id="voiceSelect">
-                <option value="">正在載入語音套件...</option>
+                <option value="">Loading voices...</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label for="rateSelect">⚡ 朗讀語速 (Speed)</label>
+            <label for="rateSelect">⚡ Reading Speed</label>
             <select id="rateSelect">
-                <option value="0.5">0.5x (慢速)</option>
-                <option value="0.75">0.75x (稍微慢)</option>
-                <option value="1.0" selected>1.0x (正常速度)</option>
-                <option value="1.25">1.25x (稍微快)</option>
-                <option value="1.5">1.5x (快速)</option>
+                <option value="0.5">0.5x (Slow)</option>
+                <option value="0.75">0.75x (Slower)</option>
+                <option value="1.0" selected>1.0x (Normal)</option>
+                <option value="1.25">1.25x (Faster)</option>
+                <option value="1.5">1.5x (Fast)</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label for="fileInput">📁 上傳單字表檔 (.txt / .csv)</label>
+            <label for="fileInput">📁 Import File (.txt / .csv)</label>
             <input type="file" id="fileInput" accept=".txt, .csv">
         </div>
-    </div>
 
-    <!-- 文字輸入與範例按鈕 -->
-    <div class="input-section">
-        <h3>
-            <span>📝 編輯 / 貼上單字資料</span>
-            <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-muted);">
-                格式：單字 | 音標 | 中文意思與常用法 (或用逗號/Tab分隔)
-            </span>
-        </h3>
-        <textarea id="vocabInput" placeholder="例如：
-beleagured | /bɪˈliː.ɡɚd/ | adj. 陷入困境的、飽受挫折的 (be beleaguered by)
-belligerent | /bəˈlɪdʒ.ɚ.ənt/ | adj. 好鬥的、挑釁的 (belligerent attitude)
-beguile | /bɪˈɡaɪl/ | v. 欺騙、迷住 (beguile someone into doing sth)
-benevolent | /bəˈnev.əl.ənt/ | adj. 仁慈的、慈善的 (benevolent gesture)"></textarea>
-        
-        <div class="btn-group">
-            <button id="renderBtn">生成單字表格</button>
-            <button id="loadSampleBtn" class="secondary">載入預設單字範例</button>
+        <div class="form-group">
+            <label>🔊 Sequential Playback</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <button id="readAllBtn" style="flex: 1;">▶ Read All</button>
+                <button id="stopBtn" class="danger" style="display: none;">⏹ Stop</button>
+            </div>
         </div>
     </div>
 
-    <!-- 單字顯示表格 -->
+    <!-- Input Section -->
+    <div class="input-section">
+        <h3>
+            <span>📝 Edit / Paste Vocabulary Data</span>
+            <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-muted);">
+                Format: Word | Chinese Meaning & Usage (or separated by comma/tab)
+            </span>
+        </h3>
+        <textarea id="vocabInput" placeholder="e.g.
+beleaguered | adj. 陷入困境的；句型：be beleaguered by problems
+belligerent | adj. 好鬥的、挑釁的；搭配：a belligerent tone / attitude
+beguile | v. 迷住、誘騙；句型：beguile someone into doing something
+benevolent | adj. 仁慈的、善意的；搭配：a benevolent smile / gesture"></textarea>
+        
+        <div class="btn-group">
+            <button id="renderBtn">Generate Table</button>
+            <button id="loadSampleBtn" class="secondary">Load Default Sample</button>
+        </div>
+    </div>
+
+    <!-- Vocabulary Table -->
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th style="width: 35%;">單字與發音 (點擊區)</th>
-                    <th style="width: 65%;">重要使用方式與解釋</th>
+                    <th style="width: 35%;">Word & Audio (Click to Listen)</th>
+                    <th style="width: 65%;">Meaning & Usage</th>
                 </tr>
             </thead>
             <tbody id="vocabTableBody">
-                <!-- 動態生成的單字列表將放於此 -->
+                <!-- Dynamically generated rows -->
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-    // 預設資料
-    const defaultData = `beleaguered | /bɪˈliː.ɡɚd/ | adj. 陷入困境的；句型：be beleaguered by problems
-belligerent | /bəˈlɪdʒ.ɚ.ənt/ | adj. 好鬥的、挑釁的；搭配：a belligerent tone / attitude
-beguile | /bɪˈɡaɪl/ | v. 迷住、誘騙；句型：beguile someone into doing something
-benevolent | /bəˈnev.əl.ənt/ | adj. 仁慈的、善意的；搭配：a benevolent smile / gesture
-beneficiary | /ˌben.əˈfɪʃ.er.i/ | n. 受益人；搭配：insurance beneficiary (保險受益人)
-bearing on | /ˈbeə.rɪŋ ɑːn/ | phr. 與…有關、對…有影響；句型：have a bearing on something`;
+    // Default Sample Data (No Phonetics)
+    const defaultData = `beleaguered | adj. 陷入困境的；句型：be beleaguered by problems
+belligerent | adj. 好鬥的、挑釁的；搭配：a belligerent tone / attitude
+beguile | v. 迷住、誘騙；句型：beguile someone into doing something
+benevolent | adj. 仁慈的、善意的；搭配：a benevolent smile / gesture
+beneficiary | n. 受益人；搭配：insurance beneficiary (保險受益人)
+bearing on | phr. 與…有關、對…有影響；句型：have a bearing on something`;
 
-    // 全局語音清單
     let availableVoices = [];
+    let activeWordsList = [];
+    let isReadingAll = false;
+    let currentReadingIndex = -1;
 
-    // 1. 初始化語音 TTS 選單 (自動篩選英語系)
+    // 1. Initialize TTS Voice Options
     function initVoices() {
         if (!('speechSynthesis' in window)) {
-            alert('您的瀏覽器不支援 Web Speech TTS API，請更換 Chrome 或 Edge 瀏覽器。');
+            alert('Your browser does not support Web Speech TTS API. Please use Chrome or Edge.');
             return;
         }
 
@@ -337,25 +358,21 @@ bearing on | /ˈbeə.rɪŋ ɑːn/ | phr. 與…有關、對…有影響；句型
         const voiceSelect = document.getElementById('voiceSelect');
         voiceSelect.innerHTML = '';
 
-        // 篩選英語語音 (en-US, en-GB, en-AU, en-IN 等)
         const englishVoices = availableVoices.filter(voice => voice.lang.startsWith('en'));
 
         if (englishVoices.length === 0) {
             const opt = document.createElement('option');
-            opt.textContent = '未找到英語系統語音 (使用預設)';
+            opt.textContent = 'No English voices found (Defaulting)';
             voiceSelect.appendChild(opt);
             return;
         }
 
-        // 依國家與名稱排序
         englishVoices.forEach(voice => {
             const option = document.createElement('option');
             option.value = voice.name;
-            // 標示地區標籤 (如 US, UK, AU, IN)
             let region = voice.lang.toUpperCase();
             option.textContent = `${voice.name} (${region})`;
             
-            // 預設選擇美語 (US)
             if (voice.lang === 'en-US' || voice.lang === 'en_US') {
                 option.selected = true;
             }
@@ -363,46 +380,101 @@ bearing on | /ˈbeə.rɪŋ ɑːn/ | phr. 與…有關、對…有影響；句型
         });
     }
 
-    // Chrome/Edge 非同步載入 Voice 的事件監聽
     if (speechSynthesis.onvoiceschanged !== undefined) {
         speechSynthesis.onvoiceschanged = initVoices;
     }
 
-    // 2. 朗讀功能
-    function speakWord(wordText) {
+    // 2. Pronounce Single Word
+    function speakWord(wordText, onEndCallback = null) {
         if (!('speechSynthesis' in window)) return;
 
-        // 停止之前的朗讀
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(wordText);
         const selectedVoiceName = document.getElementById('voiceSelect').value;
         const selectedRate = parseFloat(document.getElementById('rateSelect').value) || 1.0;
 
-        // 設定口音與語速
         const chosenVoice = availableVoices.find(v => v.name === selectedVoiceName);
         if (chosenVoice) {
             utterance.voice = chosenVoice;
         }
         utterance.rate = selectedRate;
 
+        if (onEndCallback) {
+            utterance.onend = onEndCallback;
+            utterance.onerror = onEndCallback;
+        }
+
         window.speechSynthesis.speak(utterance);
     }
 
-    // 3. 解析與渲染表格
+    // 3. Sequential Playback Feature (Read All)
+    function stopSequentialReading() {
+        isReadingAll = false;
+        window.speechSynthesis.cancel();
+        clearRowHighlights();
+        document.getElementById('readAllBtn').style.display = 'inline-flex';
+        document.getElementById('stopBtn').style.display = 'none';
+    }
+
+    function clearRowHighlights() {
+        const rows = document.querySelectorAll('#vocabTableBody tr');
+        rows.forEach(r => r.classList.remove('reading-active'));
+    }
+
+    function readNextInSequence() {
+        if (!isReadingAll || currentReadingIndex >= activeWordsList.length) {
+            stopSequentialReading();
+            return;
+        }
+
+        clearRowHighlights();
+        const rows = document.querySelectorAll('#vocabTableBody tr');
+        if (rows[currentReadingIndex]) {
+            rows[currentReadingIndex].classList.add('reading-active');
+            rows[currentReadingIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        const wordToRead = activeWordsList[currentReadingIndex];
+
+        speakWord(wordToRead, () => {
+            if (!isReadingAll) return;
+            currentReadingIndex++;
+            // Dynamic delay based on rate
+            const rate = parseFloat(document.getElementById('rateSelect').value) || 1.0;
+            const delay = 600 / rate; 
+            setTimeout(readNextInSequence, delay);
+        });
+    }
+
+    function startSequentialReading() {
+        if (activeWordsList.length === 0) return;
+        
+        isReadingAll = true;
+        currentReadingIndex = 0;
+        
+        document.getElementById('readAllBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'inline-flex';
+
+        readNextInSequence();
+    }
+
+    // 4. Parse & Render Table
     function renderTable(rawText) {
+        stopSequentialReading();
+
         const tbody = document.getElementById('vocabTableBody');
         tbody.innerHTML = '';
+        activeWordsList = [];
 
         const lines = rawText.split('\n').filter(line => line.trim() !== '');
 
         if (lines.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#94a3b8;">尚未輸入任何單字資料</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#94a3b8;">No vocabulary data available</td></tr>';
             return;
         }
 
         lines.forEach(line => {
-            // 支援 '|', ',', '\t' 分隔符號
             let parts = [];
             if (line.includes('|')) {
                 parts = line.split('|');
@@ -413,43 +485,36 @@ bearing on | /ˈbeə.rɪŋ ɑːn/ | phr. 與…有關、對…有影響；句型
             }
 
             const word = parts[0] ? parts[0].trim() : '';
-            const phonetic = parts[1] && parts[1].includes('/') ? parts[1].trim() : '';
-            
-            // 如果第二欄不是音標，就歸類為解釋
-            let usage = '';
-            if (phonetic) {
-                usage = parts.slice(2).join(' ').trim();
-            } else {
-                usage = parts.slice(1).join(' ').trim();
-            }
+            const usage = parts.slice(1).join(' ').trim();
 
             if (!word) return;
 
+            activeWordsList.push(word);
+
             const tr = document.createElement('tr');
 
-            // 欄位 1：點擊發音互動區 (可點擊透明/亮色 div)
+            // Column 1: Interactive Word Box
             const tdWord = document.createElement('td');
             const interactiveZone = document.createElement('div');
             interactiveZone.className = 'word-interactive-zone';
-            interactiveZone.title = '點擊發音 (TTS)';
+            interactiveZone.title = 'Click to listen';
             
             interactiveZone.innerHTML = `
                 <span class="word-text">${escapeHtml(word)}</span>
-                ${phonetic ? `<span class="word-phonetic">${escapeHtml(phonetic)}</span>` : ''}
                 <span class="hint-tag">🔊</span>
             `;
 
-            // 綁定點擊事件
             interactiveZone.addEventListener('click', () => {
+                stopSequentialReading();
                 speakWord(word);
             });
 
             tdWord.appendChild(interactiveZone);
 
-            // 欄位 2：重要使用方式/中文解釋
+            // Column 2: Chinese Meaning & Usage
             const tdUsage = document.createElement('td');
             tdUsage.className = 'usage-text';
-            tdUsage.innerHTML = escapeHtml(usage || '暫無註解/用法說明');
+            tdUsage.innerHTML = escapeHtml(usage || 'No definition available');
 
             tr.appendChild(tdWord);
             tr.appendChild(tdUsage);
@@ -457,7 +522,7 @@ bearing on | /ˈbeə.rɪŋ ɑːn/ | phr. 與…有關、對…有影響；句型
         });
     }
 
-    // 工具函式：防止 XSS
+    // Security Helper: Escape HTML
     function escapeHtml(str) {
         return str.replace(/&/g, "&amp;")
                   .replace(/</g, "&lt;")
@@ -466,7 +531,7 @@ bearing on | /ˈbeə.rɪŋ ɑːn/ | phr. 與…有關、對…有影響；句型
                   .replace(/'/g, "&#039;");
     }
 
-    // 4. 事件綁定
+    // 5. Event Listeners
     document.getElementById('renderBtn').addEventListener('click', () => {
         const text = document.getElementById('vocabInput').value;
         renderTable(text);
@@ -477,7 +542,10 @@ bearing on | /ˈbeə.rɪŋ ɑːn/ | phr. 與…有關、對…有影響；句型
         renderTable(defaultData);
     });
 
-    // 檔案上傳讀取 (.txt / .csv)
+    document.getElementById('readAllBtn').addEventListener('click', startSequentialReading);
+    document.getElementById('stopBtn').addEventListener('click', stopSequentialReading);
+
+    // File Import (.txt / .csv)
     document.getElementById('fileInput').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -491,7 +559,7 @@ bearing on | /ˈbeə.rɪŋ ɑːn/ | phr. 與…有關、對…有影響；句型
         reader.readAsText(file, 'UTF-8');
     });
 
-    // 初始化載入
+    // Page Load Initialization
     window.addEventListener('DOMContentLoaded', () => {
         initVoices();
         document.getElementById('vocabInput').value = defaultData;
