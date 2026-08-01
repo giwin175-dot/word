@@ -535,24 +535,38 @@ document.getElementById('fileInput').addEventListener('change', function(e){
   reader.onload = function(e){
     const lines = e.target.result.split('\n');
     let added = 0;
+    let skipped = 0;
+
     lines.forEach(line => {
       if (!line.trim()) return;
       const [en, zh] = line.split(/[,，\t]/).map(s => s && s.trim());
+      
       if (en && zh){
-        deck.push({ id: Date.now() + Math.random(), en, zh, fsrs: fsrs.initCard() });
-        added++;
+        // 檢查是否已存在相同的英文單字 (不區分大小寫)
+        const isDuplicate = deck.some(card => card.en.toLowerCase() === en.toLowerCase());
+        
+        if (!isDuplicate) {
+          deck.push({ id: Date.now() + Math.random(), en, zh, fsrs: fsrs.initCard() });
+          added++;
+        } else {
+          skipped++;
+        }
       }
     });
-    if (added > 0){
+
+    if (added > 0 || skipped > 0){
       saveDeck();
       startTest(true);
-      alert(`成功匯入 ${added} 個單字！`);
+      let msg = `成功匯入 ${added} 個新單字！`;
+      if (skipped > 0) msg += `\n(已自動跳過 ${skipped} 個重複單字)`;
+      alert(msg);
     } else {
       alert('解析失敗，請確認檔案格式為每行「英文,中文」');
     }
   };
   reader.readAsText(file);
 });
+
 
 function renderDeckList(){
   const el = document.getElementById('deckList');
