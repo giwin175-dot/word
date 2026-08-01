@@ -461,9 +461,15 @@ function renderCard(){
   const prevBtn = document.getElementById('btnPrevCard');
   prevBtn.disabled = queueIndex === 0;
 
+  // 🛠️ 修正 1：切換卡片時先禁用過渡動畫，直接歸位，避免翻轉閃爍
   isFlipped = false;
+  cardElem.classList.add('no-anim');
   cardElem.classList.remove('flipped');
+  // 強制瀏覽器重繪 (Reflow) 後再恢復動畫
+  void cardElem.offsetHeight; 
+  cardElem.classList.remove('no-anim');
 }
+
 
 function toggleFlip(event){
   if (event && event.target.classList.contains('tts-zone')) return;
